@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"runtime"
 	"strings"
 
 	"github.com/fatih/color"
@@ -44,15 +45,29 @@ func countPartWidth(terminal_width, service int) (n int) {
 
 func PrintDividedLine(service string) {
 
-	terminal_width, _ := terminal.Width()
-	n := countPartWidth(int(terminal_width), len(service))
+	if runtime.GOOS == "windows" {
+		n := 20
 
-	fmt.Println()
-	if service == "" {
-		fmt.Println(White(strings.Repeat("-", int(terminal_width))))
+		fmt.Println()
+		if service == "" {
+			fmt.Println(White(strings.Repeat("-", 20)))
+		} else {
+			fmt.Println(White(strings.Repeat("-", n)), Magenta(strings.ToUpper(service)), White(strings.Repeat("-", n)))
+		}
+
 	} else {
-		fmt.Println(White(strings.Repeat("-", n)), Magenta(strings.ToUpper(service)), White(strings.Repeat("-", n)))
+
+		terminal_width, _ := terminal.Width()
+		n := countPartWidth(int(terminal_width), len(service))
+
+		fmt.Println()
+		if service == "" {
+			fmt.Println(White(strings.Repeat("-", int(terminal_width))))
+		} else {
+			fmt.Println(White(strings.Repeat("-", n)), Magenta(strings.ToUpper(service)), White(strings.Repeat("-", n)))
+		}
 	}
+
 }
 
 func ProcessServiceArgument(str string) []string {
