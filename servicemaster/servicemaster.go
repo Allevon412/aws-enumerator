@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/shabarkin/aws-enumerator/utils"
 )
+var PositiveResults []string
 
 type ServiceMaster struct {
 	Svc     interface{}
@@ -74,6 +75,10 @@ func (svc *ServiceMaster) control_node() {
 			defer close(svc.api_call_result_channel)
 			defer close(svc.api_call_error_channel)
 			fmt.Println(utils.Green("Message: "), utils.Yellow("Successful"), utils.Yellow(strings.ToUpper(svc.SvcName))+utils.Yellow(":"), utils.Green(svc.result_counter-svc.error_counter), utils.Yellow("/"), utils.Red(svc.result_counter))
+			if svc.result_counter-svc.error_counter > 0 {
+				message := utils.Green("Message: ") + utils.Yellow("Successful") + utils.Yellow(strings.ToUpper(svc.SvcName)) + utils.Yellow(":") + utils.Green(svc.result_counter-svc.error_counter) + utils.Yellow("/") + utils.Red(svc.result_counter)
+				PositiveResults = append(PositiveResults, message)
+			}
 			break
 		}
 
@@ -198,4 +203,8 @@ func ServiceCall(AllAWSServices []ServiceMaster, wanted_services []string, speed
 	t := time.Now()
 	elapsed := t.Sub(start)
 	fmt.Println(utils.Green("Time:"), elapsed)
+	fmt.Println(utils.Green("Positive Results:"))
+	for i := 0; i < len(PositiveResults); i++ {
+		fmt.Println(PositiveResults[i])
+	}
 }
