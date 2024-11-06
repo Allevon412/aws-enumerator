@@ -78,7 +78,7 @@ func (svc *ServiceMaster) control_node() {
 			defer close(svc.api_call_error_channel)
 			fmt.Println(utils.Green("Message: "), utils.Yellow("Successful"), utils.Yellow(strings.ToUpper(svc.SvcName))+utils.Yellow(":"), utils.Green(svc.result_counter-svc.error_counter), utils.Yellow("/"), utils.Red(svc.result_counter))
 			if svc.result_counter-svc.error_counter > 0 {
-				message := utils.Green("Message: ") + utils.Yellow("Successful ") + utils.Yellow(strings.ToUpper(svc.SvcName)) + " " + utils.Yellow(":") + utils.Green(svc.result_counter-svc.error_counter) + utils.Yellow("/") + utils.Red(svc.result_counter)
+				message := utils.Green("Message: ") + utils.Yellow("Successful ") + utils.Yellow(strings.ToUpper(svc.SvcName)) + utils.Yellow(": ") + utils.Green(svc.result_counter-svc.error_counter) + utils.Yellow("/") + utils.Red(svc.result_counter)
 				PositiveResults = append(PositiveResults, message)
 			}
 			break

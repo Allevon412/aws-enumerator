@@ -34,7 +34,7 @@ func main() {
 	case "enum":
 		helper.Enum.Parse(os.Args[2:])
 		helper.SetEnumerationPipeline(helper.Services_enum, helper.Speed, helper.Profile)
-		fmt.Println(utils.Green("Message:"), utils.Yellow("Enumeration finished"))
+		fmt.Println(utils.Green("Message:"), utils.Yellow("Enumeration Finished"))
 
 	case "dump":
 		helper.Dump.Parse(os.Args[2:])
