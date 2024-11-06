@@ -3,9 +3,9 @@ package helper
 import (
 	"flag"
 	"fmt"
-
 	"github.com/shabarkin/aws-enumerator/servicemaster"
 	"github.com/shabarkin/aws-enumerator/servicestructs"
+
 	"github.com/shabarkin/aws-enumerator/utils"
 )
 
@@ -20,18 +20,20 @@ func changeSpeedForTime(speed string) (time int) {
 	return time
 }
 
-func SetEnumerationPipeline(services, speed *string) {
+func SetEnumerationPipeline(services, speed *string, profile *string) {
 	// Load Global Variables from file
-	utils.LoadEnv()
+	if *profile == "" {
+		fmt.Println(utils.Green("Message: "), utils.Yellow("No AWS profile specified, attempting to load from .env file"))
+		utils.LoadEnv()
+	}
 
-	if servicemaster.CheckAWSCredentials() {
-
+	fmt.Println(utils.Green("Message: "), utils.Yellow("profile name: "), utils.Cyan(*profile))
+	if servicemaster.CheckAWSCredentials(profile) {
 		servicemaster.ServiceCall(
-			servicestructs.GetServices(),
+			servicestructs.GetServices(profile),
 			utils.ProcessServiceArgument(*services),
 			changeSpeedForTime(*speed),
 		)
-
 	}
 }
 
@@ -80,10 +82,11 @@ aws-enumerator enum [command]
 Flags:
   -services     Enumerate permissions specifying services divided by comma or 'all' for total enumeration
   -speed        Speed parameter has three defitions : fast or normal or slow (default is normal)
+  -profile      Specify AWS profile to use for authentication
 
 Example:
-  ./aws-enumerator enum -services iam,sts,s3,ec2 -speed normal
-  ./aws-enumerator enum -services all
+  ./aws-enumerator enum -services iam,sts,s3,ec2 -speed normal -profile pwnedlabs
+  ./aws-enumerator enum -services all -profile pwnedlabs
 `
 
 var Cloudrider_dump_help string = `Usage:
@@ -120,6 +123,7 @@ var AWS_session_token *string = Cred.String("aws_session_token", "", "")
 var Enum *flag.FlagSet = flag.NewFlagSet("enum", flag.ExitOnError)
 var Services_enum *string = Enum.String("services", "all", "")
 var Speed *string = Enum.String("speed", "normal", "")
+var Profile *string = Enum.String("profile", "", "")
 
 var Dump *flag.FlagSet = flag.NewFlagSet("dump", flag.ExitOnError)
 var Services_dump *string = Dump.String("services", "all", "")

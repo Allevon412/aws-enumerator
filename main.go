@@ -33,8 +33,8 @@ func main() {
 		fmt.Println(utils.Green("Message: "), utils.Yellow("File"), utils.Red(".env"), utils.Yellow("with AWS credentials were created in current folder"))
 	case "enum":
 		helper.Enum.Parse(os.Args[2:])
-		helper.SetEnumerationPipeline(helper.Services_enum, helper.Speed)
-		fmt.Println(utils.Green("Message: "), utils.Yellow("Enumeration finished"))
+		helper.SetEnumerationPipeline(helper.Services_enum, helper.Speed, helper.Profile)
+		fmt.Println(utils.Green("Message:"), utils.Yellow("Enumeration finished"))
 
 	case "dump":
 		helper.Dump.Parse(os.Args[2:])

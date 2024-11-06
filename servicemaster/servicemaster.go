@@ -3,6 +3,7 @@ package servicemaster
 import (
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"io/ioutil"
 	"log"
 	"os"
@@ -15,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/shabarkin/aws-enumerator/utils"
 )
+
 var PositiveResults []string
 
 type ServiceMaster struct {
@@ -76,7 +78,7 @@ func (svc *ServiceMaster) control_node() {
 			defer close(svc.api_call_error_channel)
 			fmt.Println(utils.Green("Message: "), utils.Yellow("Successful"), utils.Yellow(strings.ToUpper(svc.SvcName))+utils.Yellow(":"), utils.Green(svc.result_counter-svc.error_counter), utils.Yellow("/"), utils.Red(svc.result_counter))
 			if svc.result_counter-svc.error_counter > 0 {
-				message := utils.Green("Message: ") + utils.Yellow("Successful ") + utils.Yellow(strings.ToUpper(svc.SvcName)) + utils.Yellow(":") + utils.Green(svc.result_counter-svc.error_counter) + utils.Yellow("/") + utils.Red(svc.result_counter)
+				message := utils.Green("Message: ") + utils.Yellow("Successful ") + utils.Yellow(strings.ToUpper(svc.SvcName)) + " " + utils.Yellow(":") + utils.Green(svc.result_counter-svc.error_counter) + utils.Yellow("/") + utils.Red(svc.result_counter)
 				PositiveResults = append(PositiveResults, message)
 			}
 			break
@@ -143,28 +145,35 @@ func (svc *ServiceMaster) save_result_to_file() {
 	ioutil.WriteFile(utils.ERROR_FILEPATH+svc.SvcName+"_errors.json", []byte(file_errors), 0644)
 }
 
-func CheckAWSCredentials() bool {
-	if utils.CheckEnvFileExistance() {
-		cfg, err := config.LoadDefaultConfig(context.TODO())
-		if err != nil {
-			fmt.Println(utils.Red("Error:"), utils.Yellow("Unable to load SDK config,"))
-			fmt.Println(utils.Green("Fix:"), utils.Yellow("The problem should be on our side, contact support please"))
-			fmt.Println(utils.Red("Trace:"), utils.Yellow(err))
-			os.Exit(1)
-		}
+func CheckAWSCredentials(profile *string) bool {
+	var (
+		cfg aws.Config
+		err error
+	)
 
-		sts_svc := sts.NewFromConfig(cfg)
-		_, aws_err := sts_svc.GetCallerIdentity(context.TODO(), &sts.GetCallerIdentityInput{})
-		if aws_err != nil {
-			fmt.Println(utils.Red("Error:"), utils.Yellow("AWS Credentials are not valid"))
-			fmt.Println(utils.Green("Fix:"), utils.Yellow("Provide AWS Credentials, use `./aws-enumerator cred -h` command"))
-			fmt.Println(utils.Red("Trace:"), utils.Yellow(aws_err))
-			os.Exit(1)
-		}
-		return true
-	} else {
-		return false
+	if *profile == "" {
+		cfg, err = config.LoadDefaultConfig(context.TODO())
 	}
+
+	cfg, err = config.LoadDefaultConfig(context.TODO(), config.WithSharedConfigProfile(*profile))
+	if err != nil {
+		fmt.Println(utils.Red("Error:"), utils.Yellow("Unable to load SDK config,"))
+		fmt.Println(utils.Green("Fix:"), utils.Yellow("The problem should be on our side, contact support please"))
+		fmt.Println(utils.Red("Trace:"), utils.Yellow(err))
+		os.Exit(1)
+	}
+
+	sts_svc := sts.NewFromConfig(cfg)
+	output, aws_err := sts_svc.GetCallerIdentity(context.TODO(), &sts.GetCallerIdentityInput{})
+	if aws_err != nil {
+		fmt.Println(utils.Red("Error:"), utils.Yellow("AWS Credentials are not valid"))
+		fmt.Println(utils.Green("Fix:"), utils.Yellow("Provide AWS Credentials, use `./aws-enumerator cred -h` command"))
+		fmt.Println(utils.Red("Trace:"), utils.Yellow(aws_err))
+		os.Exit(1)
+	}
+	fmt.Println(utils.Green("Message: "), utils.Yellow("AWS Credentials are valid: "), utils.Cyan(*output.Arn))
+	return true
+
 }
 
 func sleep_delay(i, speed int) {
@@ -200,6 +209,7 @@ func ServiceCall(AllAWSServices []ServiceMaster, wanted_services []string, speed
 		}
 		wg.Wait()
 	}
+
 	t := time.Now()
 	elapsed := t.Sub(start)
 	fmt.Println(utils.Green("Time:"), elapsed)

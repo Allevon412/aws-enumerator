@@ -2,6 +2,7 @@ package servicestructs
 
 import (
 	"context"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -114,10 +115,18 @@ import (
 	"github.com/shabarkin/aws-enumerator/utils"
 )
 
-func GetServices() []servicemaster.ServiceMaster {
+func GetServices(profile *string) []servicemaster.ServiceMaster {
 
-	cfg, err := config.LoadDefaultConfig(context.TODO())
+	var (
+		cfg aws.Config
+		err error
+	)
 
+	if *profile == "" {
+		cfg, err = config.LoadDefaultConfig(context.TODO())
+	}
+
+	cfg, err = config.LoadDefaultConfig(context.TODO(), config.WithSharedConfigProfile(*profile))
 	if err != nil {
 		log.Fatalln(utils.Red("Error:"), utils.Yellow("Unable to load SDK config,"))
 	}
